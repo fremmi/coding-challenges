@@ -6,23 +6,41 @@ import (
 	"encoding/pem"
 )
 
-// ECCKeyPair is a DTO that holds ECC private and public keys.
-type ECCKeyPair struct {
+// eccKeyPair is a DTO that holds ECC private and public keys.
+type eccKeyPair struct {
 	Public  *ecdsa.PublicKey
 	Private *ecdsa.PrivateKey
 }
 
-// ECCMarshaler can encode and decode an ECC key pair.
-type ECCMarshaler struct{}
+// Implement KeyPair interface for ECCKeyPair
+func (e *eccKeyPair) GetPrivate() any {
+	return e.Private
+}
+
+func (e *eccKeyPair) GetPublic() any {
+	return e.Public
+}
+
+// eccMarshaler can encode and decode an ECC key pair.
+type eccMarshaler struct{}
 
 // NewECCMarshaler creates a new ECCMarshaler.
-func NewECCMarshaler() ECCMarshaler {
-	return ECCMarshaler{}
+func NewECCMarshaler() eccMarshaler {
+	return eccMarshaler{}
+}
+
+// Implement Marshaler for type eccMarshaler
+func (m eccMarshaler) Encode(keyPair KeyPair) ([]byte, []byte, error) {
+	if _, ok := keyPair.(*eccKeyPair); !ok {
+		return nil, nil, ErrInvalidKeyPairType
+	}
+
+	return m.marshal(keyPair.(*eccKeyPair))
 }
 
 // Encode takes an ECCKeyPair and encodes it to be written on disk.
 // It returns the public and the private key as a byte slice.
-func (m ECCMarshaler) Encode(keyPair ECCKeyPair) ([]byte, []byte, error) {
+func (m eccMarshaler) marshal(keyPair *eccKeyPair) ([]byte, []byte, error) {
 	privateKeyBytes, err := x509.MarshalECPrivateKey(keyPair.Private)
 	if err != nil {
 		return nil, nil, err
@@ -46,15 +64,15 @@ func (m ECCMarshaler) Encode(keyPair ECCKeyPair) ([]byte, []byte, error) {
 	return encodedPublic, encodedPrivate, nil
 }
 
-// Decode assembles an ECCKeyPair from an encoded private key.
-func (m ECCMarshaler) Decode(privateKeyBytes []byte) (*ECCKeyPair, error) {
+// unmarshal assembles an ECCKeyPair from an encoded private key.
+func (m eccMarshaler) unmarshal(privateKeyBytes []byte) (*eccKeyPair, error) {
 	block, _ := pem.Decode(privateKeyBytes)
 	privateKey, err := x509.ParseECPrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ECCKeyPair{
+	return &eccKeyPair{
 		Private: privateKey,
 		Public:  &privateKey.PublicKey,
 	}, nil
