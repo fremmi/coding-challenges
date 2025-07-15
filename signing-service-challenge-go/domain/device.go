@@ -12,12 +12,14 @@ type Device struct {
 	Label string
 
 	Algorithm crypto.Algorithm
-	Operator  crypto.CryptoOperations
+	keyPair   crypto.KeyPair
+	marshaler crypto.Marshaler
+	generator crypto.Generator
 
-	keyPair crypto.KeyPair
 	Counter int64
 }
 
+// Create a persistent representation of the Device.
 func (d *Device) Persisted() ([]byte, error) {
 	persistedDevice := persistence.PersistedDevice{
 		ID:        d.Id,
@@ -26,7 +28,7 @@ func (d *Device) Persisted() ([]byte, error) {
 		Counter:   d.Counter,
 	}
 
-	persistedDevice.PrivatePEM, persistedDevice.PublicPem, _ = d.Operator.EncodeKeyPair()
+	persistedDevice.PrivatePEM, persistedDevice.PublicPem, _ = d.marshaler.Encode(d.keyPair)
 
 	// serialize persistedDevice to JSON
 	return json.Marshal(persistedDevice)
@@ -34,7 +36,7 @@ func (d *Device) Persisted() ([]byte, error) {
 
 // RestoreDevice restores a Device from its persisted JSON representation.
 func RestoreDevice(persisted []byte) (*Device, error) {
-	var d Device
+	var d = &Device{}
 	var persistedDevice persistence.PersistedDevice
 	if err := json.Unmarshal(persisted, &persistedDevice); err != nil {
 		return nil, err
@@ -47,17 +49,20 @@ func RestoreDevice(persisted []byte) (*Device, error) {
 
 	switch persistedDevice.Algorithm {
 	case crypto.AlgorithmRSA:
-		d.Operator = crypto.NewRsaCryptoOperations()
+		d.marshaler = crypto.NewRSAMarshaler()
+		d.generator = &crypto.RsaGenerator{}
 	case crypto.AlgorithmECC:
-		d.Operator = crypto.NewECCryptoOperations()
+		d.marshaler = crypto.NewECCMarshaler()
+		d.generator = &crypto.EccGenerator{}
 	default:
 		return nil, crypto.ErrUnsupportedAlgorithm
 
 	}
 
-	if (keyPair, err := d.Operator.Decode(persistedDevice.PrivatePEM); err != nil {
+	var err error
+	if d.keyPair, err = d.marshaler.Decode(persistedDevice.PrivatePEM); err != nil {
 		return nil, err
-	} else {
-		d.keyPair = keyPair
 	}
+
+	return d, nil
 }

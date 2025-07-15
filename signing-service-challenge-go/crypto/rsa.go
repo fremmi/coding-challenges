@@ -117,12 +117,3 @@ func (r *rsaCryptoOperations) DecodeKeyPair() (KeyPair, error) {
 
 	return keyPair, nil
 }
-
-// Create a new RSA CryptoOperations instance that implements the CryptoOperations interface.
-func NewRsaCryptoOperations() CryptoOperations {
-	return &rsaCryptoOperations{
-		KeyPair:   &rsaKeyPair{},
-		Generator: &rsaGenerator{},
-		Marshaler: NewRSAMarshaler(),
-	}
-}

@@ -27,17 +27,3 @@ type Marshaler interface {
 	Encode(keyPair KeyPair) ([]byte, []byte, error)
 	Decode(privateKeyBytes []byte) (KeyPair, error)
 }
-
-// CryptoOperations combines the contracts of KeyPair, Generator, and Marshaler.
-// Any type that implements CryptoOperations must implement all methods
-// defined in KeyPair, Generator, and Marshaler.
-type CryptoOperations interface {
-	KeyPair
-	Generator
-	Marshaler
-	Algorithm() Algorithm
-
-	// Encode and Decode methods are used for encoding and decoding the key pair.
-	EncodeKeyPair() ([]byte, []byte, error)
-	DecodeKeyPair() (KeyPair, error)
-}
