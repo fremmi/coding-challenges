@@ -19,6 +19,33 @@ type Device struct {
 	Counter int64
 }
 
+func NewDevice(id, label string, algo crypto.Algorithm) (*Device, error) {
+	var d = &Device{
+		Id:        id,
+		Label:     label,
+		Algorithm: algo,
+		Counter:   0,
+	}
+
+	switch algo {
+	case crypto.AlgorithmRSA:
+		d.marshaler = crypto.NewRSAMarshaler()
+		d.generator = &crypto.RsaGenerator{}
+	case crypto.AlgorithmECC:
+		d.marshaler = crypto.NewECCMarshaler()
+		d.generator = &crypto.EccGenerator{}
+	default:
+		return nil, crypto.ErrUnsupportedAlgorithm
+	}
+
+	var err error
+	if d.keyPair, err = d.generator.GenerateKeyPair(); err != nil {
+		return nil, err
+	}
+
+	return d, nil
+}
+
 // Create a persistent representation of the Device.
 func (d *Device) Persisted() ([]byte, error) {
 	persistedDevice := persistence.PersistedDevice{
@@ -26,6 +53,10 @@ func (d *Device) Persisted() ([]byte, error) {
 		Label:     d.Label,
 		Algorithm: d.Algorithm,
 		Counter:   d.Counter,
+	}
+
+	if d.keyPair == nil || d.marshaler == nil {
+		return nil, crypto.ErrUnsupportedAlgorithm
 	}
 
 	persistedDevice.PrivatePEM, persistedDevice.PublicPem, _ = d.marshaler.Encode(d.keyPair)
