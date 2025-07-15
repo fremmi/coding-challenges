@@ -1,5 +1,9 @@
 package crypto
 
+import "errors"
+
+var ErrUnsupportedAlgorithm = errors.New("unsupported algorithm")
+
 type Algorithm string
 
 const (

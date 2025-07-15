@@ -114,7 +114,7 @@ func (ecc *eccCryptoOperations) DecodeKeyPair() (KeyPair, error) {
 	return keyPair, nil
 }
 
-func NewECCCryptoOperations() CryptoOperations {
+func NewECCryptoOperations() CryptoOperations {
 	return &eccCryptoOperations{
 		KeyPair:   &eccKeyPair{},
 		Generator: &eccGenerator{},

@@ -7,24 +7,23 @@ import (
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/persistence"
 )
 
-
 type Device struct {
 	Id    string
 	Label string
 
 	Algorithm crypto.Algorithm
-	Operator crypto.CryptoOperations
+	Operator  crypto.CryptoOperations
 
+	keyPair crypto.KeyPair
 	Counter int64
 }
 
-
-func (d* Device) Persisted () ([]byte, error) {
+func (d *Device) Persisted() ([]byte, error) {
 	persistedDevice := persistence.PersistedDevice{
-		ID:         d.Id,
-		Label:      d.Label,
-		Algorithm:  d.Algorithm,
-		Counter:    d.Counter,
+		ID:        d.Id,
+		Label:     d.Label,
+		Algorithm: d.Algorithm,
+		Counter:   d.Counter,
 	}
 
 	persistedDevice.PrivatePEM, persistedDevice.PublicPem, _ = d.Operator.EncodeKeyPair()
@@ -34,7 +33,7 @@ func (d* Device) Persisted () ([]byte, error) {
 }
 
 // RestoreDevice restores a Device from its persisted JSON representation.
-func  RestoreDevice(persisted []byte) (*Device, error) {
+func RestoreDevice(persisted []byte) (*Device, error) {
 	var d Device
 	var persistedDevice persistence.PersistedDevice
 	if err := json.Unmarshal(persisted, &persistedDevice); err != nil {
@@ -48,13 +47,17 @@ func  RestoreDevice(persisted []byte) (*Device, error) {
 
 	switch persistedDevice.Algorithm {
 	case crypto.AlgorithmRSA:
-		d.Operator = crypto.NewRSAGenerator()
+		d.Operator = crypto.NewRsaCryptoOperations()
 	case crypto.AlgorithmECC:
-		d.Operator = crypto.NewECCGenerator()
+		d.Operator = crypto.NewECCryptoOperations()
 	default:
 		return nil, crypto.ErrUnsupportedAlgorithm
 
-		
-	d.Operator.DecodeKeyPair(persistedDevice.PrivatePEM)	
+	}
 
+	if (keyPair, err := d.Operator.Decode(persistedDevice.PrivatePEM); err != nil {
+		return nil, err
+	} else {
+		d.keyPair = keyPair
+	}
 }
