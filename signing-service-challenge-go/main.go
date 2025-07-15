@@ -1,9 +1,11 @@
 package main
 
 import (
+	"flag"
 	"log"
 
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/api"
+	"k8s.io/klog"
 )
 
 const (
@@ -12,6 +14,10 @@ const (
 )
 
 func main() {
+	flag.Parse()
+	defer klog.Flush()
+
+	klog.Infof("Starting signing service on %s", ListenAddress)
 	server := api.NewServer(ListenAddress)
 
 	if err := server.Run(); err != nil {

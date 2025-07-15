@@ -3,7 +3,9 @@ package crypto
 import (
 	cr "crypto"
 	"crypto/ecdsa"
+	"crypto/rand"
 	rsa "crypto/rsa"
+	"crypto/sha256"
 )
 
 // Signer defines a contract for different types of signing implementations.
@@ -32,7 +34,9 @@ func NewSigner(algo Algorithm, keys KeyPair) Signer {
 }
 
 func (r *rsaSigner) Sign(dataToBeSigned []byte) ([]byte, error) {
-	signature, err := rsa.SignPKCS1v15(nil, r.rsaKeyPair.Private, cr.SHA256, dataToBeSigned)
+	hashed := sha256.Sum256(dataToBeSigned)
+
+	signature, err := rsa.SignPKCS1v15(rand.Reader, r.rsaKeyPair.Private, cr.SHA256, hashed[:])
 	if err != nil {
 		return nil, err
 	}

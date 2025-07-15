@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/crypto"
+	"k8s.io/klog"
 )
 
 type Device struct {
@@ -61,12 +62,13 @@ func (d *Device) SignTransaction(transaction string) (string, string, error) {
 
 	// The case where counter is 0 is handled by the device creation
 	data := fmt.Sprintf("%d_%s_%s", d.Counter, transaction, d.lastSignature)
+	klog.Infof("Signing transaction with data: %s", data)
 
 	if signature, err := d.Signer.Sign([]byte(data)); err != nil {
 		return "", "", err
 	} else {
 		d.Counter++
 		d.lastSignature = base64.StdEncoding.EncodeToString(signature)
-		return d.lastSignature, base64.StdEncoding.EncodeToString(signature), nil
+		return d.lastSignature, transaction, nil
 	}
 }

@@ -24,73 +24,74 @@ type CreateSignatureRequestBody struct {
 	Label     string           `json:"label"`
 }
 
-type SingTransactionRequestBody struct {
+type SignTransactionRequestBody struct {
 	ID          string `json:"id"`
 	Transaction string `json:"transaction"`
 }
 
+// CreateSignatureDevice handles the creation of a new signature device.
 func (s *Server) CreateSignatureDevice(response http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodGet {
+	if request.Method != http.MethodPost {
 		WriteErrorResponse(response, http.StatusMethodNotAllowed, []string{
 			http.StatusText(http.StatusMethodNotAllowed),
 		})
 		return
 	}
 
-	body, err := request.GetBody()
-	if err != nil {
-		WriteInternalError(response)
-		return
-	}
-
-	var req CreateSignatureRequestBody
-	if err = json.NewDecoder(body).Decode(req); err != nil {
-		http.Error(response, "Bad request: Invalid JSON body", http.StatusBadRequest)
-		return
-	}
-
 	defer request.Body.Close()
 
-	_, err = s.deviceManager.AddDevice(req.ID, req.Algorithm, req.Label)
+	var req CreateSignatureRequestBody
+
+	if err := json.NewDecoder(request.Body).Decode(&req); err != nil {
+		// More specific error handling for JSON decoding issues
+		WriteErrorResponse(response, http.StatusBadRequest, []string{
+			"Invalid JSON body",
+			err.Error(), // Include the underlying error for debugging
+		})
+		return
+	}
+
+	// Assuming AddDevice returns a success indicator (ignored here via _)
+	// and an error.
+	_, err := s.deviceManager.AddDevice(req.ID, req.Algorithm, req.Label)
 
 	var responseBody CreateSignatureDeviceResponse
 	if err != nil {
-		// Handle error (e.g., device already exists)
+		// If an error occurs, set the error response and RETURN.
 		responseBody = CreateSignatureDeviceResponse{
 			Status: "error",
 			Error:  err.Error(),
 		}
+		WriteAPIResponse(response, http.StatusBadRequest, responseBody) // Use 400 or specific error status
+		return                                                          // Crucial: Stop execution here
 	}
 
+	// If no error, set the success response.
 	responseBody = CreateSignatureDeviceResponse{
 		Status: "success",
-		Error:  "",
+		Error:  "", // Error field remains empty on success
 	}
 
+	// Send the success response.
 	WriteAPIResponse(response, http.StatusOK, responseBody)
 }
 
 func (s *Server) SignTransaction(response http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodGet {
+	if request.Method != http.MethodPost {
 		WriteErrorResponse(response, http.StatusMethodNotAllowed, []string{
 			http.StatusText(http.StatusMethodNotAllowed),
 		})
 		return
 	}
 
-	body, err := request.GetBody()
-	if err != nil {
-		WriteInternalError(response)
-		return
-	}
+	defer request.Body.Close()
 
-	var req SingTransactionRequestBody
-	if err = json.NewDecoder(body).Decode(&req); err != nil {
+	var req SignTransactionRequestBody
+	if err := json.NewDecoder(request.Body).Decode(&req); err != nil {
 		http.Error(response, "Bad request: Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
-	defer request.Body.Close()
 	deviceId := req.ID
 	transaction := req.Transaction
 	if deviceId == "" || transaction == "" {
@@ -98,27 +99,24 @@ func (s *Server) SignTransaction(response http.ResponseWriter, request *http.Req
 		return
 	}
 
-	var responseBody SignTransactionResponse
-	// Retrieve the device from the device manager
 	device, err := s.deviceManager.GetDevice(deviceId)
 	if err != nil {
-		responseBody = SignTransactionResponse{
+		WriteAPIResponse(response, http.StatusNotFound, SignTransactionResponse{
 			Error: err.Error(),
-		}
+		})
+		return
 	}
 
-	signature, signed_data, err := device.SignTransaction(transaction)
+	signature, signedData, err := device.SignTransaction(transaction)
 	if err != nil {
-		responseBody = SignTransactionResponse{
+		WriteAPIResponse(response, http.StatusInternalServerError, SignTransactionResponse{
 			Error: err.Error(),
-		}
+		})
+		return
 	}
 
-	responseBody = SignTransactionResponse{
+	WriteAPIResponse(response, http.StatusOK, SignTransactionResponse{
 		Signature:  signature,
-		SignedData: signed_data,
-		Error:      "",
-	}
-
-	WriteAPIResponse(response, http.StatusOK, responseBody)
+		SignedData: signedData,
+	})
 }
