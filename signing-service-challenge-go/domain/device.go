@@ -7,5 +7,7 @@ type Device struct {
 	id    string
 	label string
 
-	generator crypto.Generator
+	operator crypto.CryptoOperations
+
+	counter int64
 }

@@ -28,8 +28,8 @@ func (r *rsaKeyPair) GetPublic() any {
 type rsaMarshaler struct{}
 
 // NewRSAMarshaler creates a new RSAMarshaler.
-func NewRSAMarshaler() rsaMarshaler {
-	return rsaMarshaler{}
+func NewRSAMarshaler() *rsaMarshaler {
+	return &rsaMarshaler{}
 }
 
 // Implement Marshaler for type rsaMarshaler
@@ -82,4 +82,17 @@ func (m *rsaMarshaler) unmarshal(privateKeyBytes []byte) (*rsaKeyPair, error) {
 		Private: privateKey,
 		Public:  &privateKey.PublicKey,
 	}, nil
+}
+
+// Create a new RSA CryptoOperations instance that implements the CryptoOperations interface.
+func NewRsaCryptoOperations() CryptoOperations {
+	return struct {
+		KeyPair
+		Generator
+		Marshaler
+	}{
+		KeyPair:   &rsaKeyPair{},
+		Generator: &rsaGenerator{},
+		Marshaler: NewRSAMarshaler(),
+	}
 }

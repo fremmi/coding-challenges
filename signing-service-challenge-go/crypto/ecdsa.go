@@ -25,17 +25,25 @@ func (e *eccKeyPair) GetPublic() any {
 type eccMarshaler struct{}
 
 // NewECCMarshaler creates a new ECCMarshaler.
-func NewECCMarshaler() eccMarshaler {
-	return eccMarshaler{}
+func NewECCMarshaler() *eccMarshaler {
+	return &eccMarshaler{}
 }
 
 // Implement Marshaler for type eccMarshaler
-func (m eccMarshaler) Encode(keyPair KeyPair) ([]byte, []byte, error) {
+func (m *eccMarshaler) Encode(keyPair KeyPair) ([]byte, []byte, error) {
 	if _, ok := keyPair.(*eccKeyPair); !ok {
 		return nil, nil, ErrInvalidKeyPairType
 	}
 
 	return m.marshal(keyPair.(*eccKeyPair))
+}
+
+func (m *eccMarshaler) Decode(privateKeyBytes []byte) (KeyPair, error) {
+	keyPair, err := m.unmarshal(privateKeyBytes)
+	if err != nil {
+		return nil, err
+	}
+	return keyPair, nil
 }
 
 // Encode takes an ECCKeyPair and encodes it to be written on disk.
@@ -76,4 +84,16 @@ func (m eccMarshaler) unmarshal(privateKeyBytes []byte) (*eccKeyPair, error) {
 		Private: privateKey,
 		Public:  &privateKey.PublicKey,
 	}, nil
+}
+
+func NewECCCryptoOperations() CryptoOperations {
+	return struct {
+		KeyPair
+		Generator
+		Marshaler
+	}{
+		KeyPair:   &eccKeyPair{},
+		Generator: &eccGenerator{},
+		Marshaler: NewECCMarshaler(),
+	}
 }
