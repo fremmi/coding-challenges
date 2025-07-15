@@ -7,13 +7,14 @@ import (
 	"errors"
 )
 
+// A builder function for creating a new Marshaler. Useful for testing or when you want to use a different implementation.
 var NewRSAMarshaler = func() Marshaler {
 	return newRSAMarshaler()
 }
 
 var ErrInvalidKeyPairType = errors.New("invalid key pair type")
 
-// rsaKeyPair is a DTO that holds RSA private and public keys.
+// rsaKeyPair implements KeyPair interface
 type rsaKeyPair struct {
 	Public  *rsa.PublicKey
 	Private *rsa.PrivateKey
@@ -28,15 +29,14 @@ func (r *rsaKeyPair) GetPublic() any {
 	return r.Public
 }
 
-// rsaMarshaler can encode and decode an RSA key pair.
+// rsaMarshaler implements Marshaler interface
 type rsaMarshaler struct{}
 
-// NewRSAMarshaler creates a new RSAMarshaler.
+// newRSAMarshaler creates a new RSAMarshaler.
 func newRSAMarshaler() *rsaMarshaler {
 	return &rsaMarshaler{}
 }
 
-// Implement Marshaler for type rsaMarshaler
 func (m *rsaMarshaler) Encode(keyPair KeyPair) ([]byte, []byte, error) {
 	if _, ok := keyPair.(*rsaKeyPair); !ok {
 		return nil, nil, ErrInvalidKeyPairType
@@ -86,38 +86,4 @@ func (m *rsaMarshaler) unmarshal(privateKeyBytes []byte) (*rsaKeyPair, error) {
 		Private: privateKey,
 		Public:  &privateKey.PublicKey,
 	}, nil
-}
-
-// rsaCryptoOperations is a struct that implements the CryptoOperations interface
-type rsaCryptoOperations struct {
-	KeyPair
-	Generator
-	Marshaler
-}
-
-func (r *rsaCryptoOperations) Algorithm() Algorithm {
-	return AlgorithmRSA
-}
-
-// EncodeKeyPair encodes the RSA key pair into public and private key byte slices.
-func (r *rsaCryptoOperations) EncodeKeyPair() ([]byte, []byte, error) {
-	publicKey, privateKey, err := r.Marshaler.Encode(r.KeyPair)
-	if err != nil {
-		return nil, nil, err
-	}
-	return publicKey, privateKey, nil
-}
-
-// DecodeKeyPair decodes the RSA private key bytes into an RSAKeyPair.
-func (r *rsaCryptoOperations) DecodeKeyPair() (KeyPair, error) {
-	keyPair, err := r.Marshaler.Decode(r.KeyPair.GetPrivate().([]byte))
-	if err != nil {
-		return nil, err
-	}
-
-	if _, ok := keyPair.(*rsaKeyPair); !ok {
-		return nil, ErrInvalidKeyPairType
-	}
-
-	return keyPair, nil
 }

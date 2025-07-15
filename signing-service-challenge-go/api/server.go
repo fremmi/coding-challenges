@@ -27,8 +27,8 @@ type Server struct {
 func NewServer(listenAddress string) *Server {
 	return &Server{
 		listenAddress: listenAddress,
+		// Initialize the DeviceManager with an in-memory persistence layer.
 		deviceManager: persistence.NewDeviceManager(),
-		// TODO: add services / further dependencies here ...
 	}
 }
 

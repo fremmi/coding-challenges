@@ -10,6 +10,10 @@ import (
 
 var ErrDeviceAlreadyExists = errors.New("device already exists")
 
+// PersistedDevice is a struct that represents a device in a persistent format.
+// This is a basic and incomplete implementation just to illustrate the concept of
+// persisting and restoring devices
+// Not even sure this the best way to do it, but it is a start.
 type PersistedDevice struct {
 	ID         string           `json:"id"`
 	Label      string           `json:"label"`
@@ -17,6 +21,8 @@ type PersistedDevice struct {
 	Counter    int64            `json:"counter"`
 	PrivatePEM []byte           `json:"private_key"` // PEM-encoded private key
 	PublicPem  []byte           `json:"public_key"`  // PEM-encoded public key
+
+	// TODO serialize transactions
 }
 
 // Create a persistent representation of the Device.
@@ -72,6 +78,8 @@ func RestoreDevice(persisted []byte) (*domain.Device, error) {
 	return d, nil
 }
 
+// DeviceManager is a struct that manages devices in memory.
+// It is able to add, retrieve, store and restore a device
 type DeviceManager struct {
 	devices map[string]*domain.Device
 }

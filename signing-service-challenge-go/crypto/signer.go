@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 )
 
+// Builder functions. Useful for testing or when you want to use a different implementation.
 var NewSigner = func(algo Algorithm, keys KeyPair) Signer {
 	return newSigner(algo, keys)
 }
@@ -17,6 +18,7 @@ type Signer interface {
 	Sign(dataToBeSigned []byte) ([]byte, error)
 }
 
+// rsaSigner implements the Signer interface for RSA keys.
 type rsaSigner struct {
 	rsaKeyPair *rsaKeyPair
 }
@@ -47,6 +49,7 @@ func (r *rsaSigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 	return signature, nil
 }
 
+// eccSigner implements the Signer interface for ECC keys.
 type eccSigner struct {
 	eccKeyPair *eccKeyPair
 }

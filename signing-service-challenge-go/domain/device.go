@@ -10,11 +10,14 @@ import (
 	"k8s.io/klog"
 )
 
+// Transaction represents a signed transaction with its signature and data.
 type Transaction struct {
 	Signature string
 	Data      string
 }
 
+// Device represents a signature device that can sign transactions.
+// it keeps the list of transactions signed by this device
 type Device struct {
 	Id    string
 	Label string
@@ -63,10 +66,14 @@ func NewDevice(id, label string, algo crypto.Algorithm) (*Device, error) {
 	// Initialize the last signature to  base64 device ID
 	d.LastSignature = base64.StdEncoding.EncodeToString([]byte(d.Id))
 
+	// Initialize the transactions map
 	d.Transactions = make(map[int64]Transaction)
 	return d, nil
 }
 
+// SignTransaction signs a transaction with the device's private key.
+// It returns the signature, the data that was signed, and any error encountered.
+// Counter is incremented after each successful signing operation.
 func (d *Device) SignTransaction(transaction string) (string, string, error) {
 	d.Lock()
 	defer d.Unlock()
@@ -88,6 +95,7 @@ func (d *Device) SignTransaction(transaction string) (string, string, error) {
 	}
 }
 
+// ListTransactions returns a slice of all transactions signed by the device.
 func (d *Device) ListTransactions() []Transaction {
 	d.Lock()
 	defer d.Unlock()
@@ -101,6 +109,8 @@ func (d *Device) ListTransactions() []Transaction {
 	return arr
 }
 
+// GetTransaction retrieves a specific transaction by its index.
+// The index is the counter value at which the transaction was signed.
 func (d *Device) GetTransaction(index int64) (Transaction, error) {
 	d.Lock()
 	defer d.Unlock()

@@ -8,6 +8,9 @@ import (
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/crypto"
 )
 
+// Types defining HTTP request and responses
+// For convenience, only POST method is used for all requests,
+// even for those that could be GET requests.
 type CreateSignatureDeviceResponse struct {
 	Status string `json:"status"`
 	Error  string `json:"error,omitempty"`
@@ -65,8 +68,7 @@ func (s *Server) CreateSignatureDevice(response http.ResponseWriter, request *ht
 		return
 	}
 
-	// Assuming AddDevice returns a success indicator (ignored here via _)
-	// and an error.
+	// forward the request to the device manager to create a new device
 	_, err := s.deviceManager.AddDevice(req.ID, req.Algorithm, req.Label)
 
 	var responseBody CreateSignatureDeviceResponse
@@ -107,12 +109,13 @@ func (s *Server) SignTransaction(response http.ResponseWriter, request *http.Req
 	}
 
 	deviceId := req.ID
-	transaction := req.Transaction
-	if deviceId == "" || transaction == "" {
-		http.Error(response, "Bad request: Missing device ID or transaction", http.StatusBadRequest)
+	data := req.Transaction
+	if deviceId == "" || data == "" {
+		http.Error(response, "Bad request: Missing device ID or data", http.StatusBadRequest)
 		return
 	}
 
+	// Look for the previously created device in the device manager
 	device, err := s.deviceManager.GetDevice(deviceId)
 	if err != nil {
 		WriteAPIResponse(response, http.StatusNotFound, SignTransactionResponse{
@@ -121,7 +124,8 @@ func (s *Server) SignTransaction(response http.ResponseWriter, request *http.Req
 		return
 	}
 
-	signature, signedData, err := device.SignTransaction(transaction)
+	// Ask the actual device to sign the transaction
+	signature, signedData, err := device.SignTransaction(data)
 	if err != nil {
 		WriteAPIResponse(response, http.StatusInternalServerError, SignTransactionResponse{
 			Error: err.Error(),
@@ -157,6 +161,7 @@ func (s *Server) ListTransactions(response http.ResponseWriter, request *http.Re
 		return
 	}
 
+	// Look for the previously created device in the device manager
 	device, err := s.deviceManager.GetDevice(deviceId)
 	if err != nil {
 		WriteAPIResponse(response, http.StatusNotFound, SignTransactionResponse{
@@ -165,8 +170,10 @@ func (s *Server) ListTransactions(response http.ResponseWriter, request *http.Re
 		return
 	}
 
+	// Get the list of transactions from the device
 	transactions := device.ListTransactions()
 
+	// Transform the transactions into a slice of SignTransactionResponse
 	trasactionResponses := make([]SignTransactionResponse, len(transactions), len(transactions))
 
 	for index, t := range transactions {
@@ -199,12 +206,14 @@ func (s *Server) GetTransaction(response http.ResponseWriter, request *http.Requ
 	}
 
 	deviceId := req.DeviceID
+	// transaction_id represent the counter value for the transaction
 	transactionId := req.TransactionID
 	if deviceId == "" || transactionId == "" {
 		http.Error(response, "Bad request: Missing device ID or transaction ID", http.StatusBadRequest)
 		return
 	}
 
+	// Look for the previously created device in the device manager
 	device, err := s.deviceManager.GetDevice(deviceId)
 	if err != nil {
 		WriteAPIResponse(response, http.StatusNotFound, SignTransactionResponse{
@@ -222,6 +231,7 @@ func (s *Server) GetTransaction(response http.ResponseWriter, request *http.Requ
 		return
 	}
 
+	// Get the transaction from the device
 	transaction, err := device.GetTransaction(int64(id))
 
 	if err != nil {

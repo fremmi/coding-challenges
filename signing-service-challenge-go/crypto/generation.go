@@ -7,6 +7,7 @@ import (
 	"crypto/rsa"
 )
 
+// Builder functions. Useful for testing or when you want to use a different implementation.
 var NewRsaGenerator = func() Generator {
 	return &RsaGenerator{}
 }
@@ -15,10 +16,9 @@ var NewEccGenerator = func() Generator {
 	return &EccGenerator{}
 }
 
-// RsaGenerator generates a RSA key pair.
+// RsaGenerator implements Generator interface
 type RsaGenerator struct{}
 
-// Implement Generator for type RSAKeyPair
 func (g *RsaGenerator) GenerateKeyPair() (KeyPair, error) {
 	return g.generate()
 }
@@ -37,7 +37,7 @@ func (g *RsaGenerator) generate() (*rsaKeyPair, error) {
 	}, nil
 }
 
-// EccGenerator generates an ECC key pair.
+// EccGenerator implements Generator interface
 type EccGenerator struct{}
 
 // Implement Generator for type ECCKeyPair
