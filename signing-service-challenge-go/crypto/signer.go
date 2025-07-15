@@ -48,7 +48,9 @@ type eccSigner struct {
 }
 
 func (e *eccSigner) Sign(dataToBeSigned []byte) ([]byte, error) {
-	signature, err := ecdsa.SignASN1(nil, e.eccKeyPair.Private, dataToBeSigned)
+	hashed := sha256.Sum256(dataToBeSigned)
+
+	signature, err := ecdsa.SignASN1(rand.Reader, e.eccKeyPair.Private, hashed[:])
 	if err != nil {
 		return nil, err
 	}
