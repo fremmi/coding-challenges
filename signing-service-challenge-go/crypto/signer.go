@@ -5,4 +5,6 @@ type Signer interface {
 	Sign(dataToBeSigned []byte) ([]byte, error)
 }
 
-// TODO: implement RSA and ECDSA signing ...
+// Notice. Instead of implementing the Signer interface directly,
+// I choose to implement the CryptoOperations interface which embodies
+// KeyPair, Generator, and Marshaler contracts.

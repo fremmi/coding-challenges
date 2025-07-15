@@ -86,12 +86,36 @@ func (m eccMarshaler) unmarshal(privateKeyBytes []byte) (*eccKeyPair, error) {
 	}, nil
 }
 
+// eccCryptoOperations implements the CryptoOperations interface for ECC.
+type eccCryptoOperations struct {
+	KeyPair
+	Generator
+	Marshaler
+}
+
+func (ecc *eccCryptoOperations) Algorithm() Algorithm {
+	return AlgorithmECC
+}
+
+// EncodeKeyPair encodes the ECC key pair into public and private key byte slices.
+func (ecc *eccCryptoOperations) EncodeKeyPair() ([]byte, []byte, error) {
+	publicKey, privateKey, err := ecc.Marshaler.Encode(ecc.KeyPair)
+	if err != nil {
+		return nil, nil, err
+	}
+	return publicKey, privateKey, nil
+}
+
+func (ecc *eccCryptoOperations) DecodeKeyPair() (KeyPair, error) {
+	keyPair, err := ecc.Marshaler.Decode(ecc.KeyPair.GetPrivate().([]byte))
+	if err != nil {
+		return nil, err
+	}
+	return keyPair, nil
+}
+
 func NewECCCryptoOperations() CryptoOperations {
-	return struct {
-		KeyPair
-		Generator
-		Marshaler
-	}{
+	return &eccCryptoOperations{
 		KeyPair:   &eccKeyPair{},
 		Generator: &eccGenerator{},
 		Marshaler: NewECCMarshaler(),

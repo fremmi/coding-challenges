@@ -1,5 +1,12 @@
 package crypto
 
+type Algorithm string
+
+const (
+	AlgorithmRSA Algorithm = "RSA"
+	AlgorithmECC Algorithm = "ECC"
+)
+
 // KeyPair defines a contract for key pair implementations.
 type KeyPair interface {
 	GetPrivate() any
@@ -24,4 +31,9 @@ type CryptoOperations interface {
 	KeyPair
 	Generator
 	Marshaler
+	Algorithm() Algorithm
+
+	// Encode and Decode methods are used for encoding and decoding the key pair.
+	EncodeKeyPair() ([]byte, []byte, error)
+	DecodeKeyPair() (KeyPair, error)
 }

@@ -84,13 +84,43 @@ func (m *rsaMarshaler) unmarshal(privateKeyBytes []byte) (*rsaKeyPair, error) {
 	}, nil
 }
 
+// rsaCryptoOperations is a struct that implements the CryptoOperations interface
+type rsaCryptoOperations struct {
+	KeyPair
+	Generator
+	Marshaler
+}
+
+func (r *rsaCryptoOperations) Algorithm() Algorithm {
+	return AlgorithmRSA
+}
+
+// EncodeKeyPair encodes the RSA key pair into public and private key byte slices.
+func (r *rsaCryptoOperations) EncodeKeyPair() ([]byte, []byte, error) {
+	publicKey, privateKey, err := r.Marshaler.Encode(r.KeyPair)
+	if err != nil {
+		return nil, nil, err
+	}
+	return publicKey, privateKey, nil
+}
+
+// DecodeKeyPair decodes the RSA private key bytes into an RSAKeyPair.
+func (r *rsaCryptoOperations) DecodeKeyPair() (KeyPair, error) {
+	keyPair, err := r.Marshaler.Decode(r.KeyPair.GetPrivate().([]byte))
+	if err != nil {
+		return nil, err
+	}
+
+	if _, ok := keyPair.(*rsaKeyPair); !ok {
+		return nil, ErrInvalidKeyPairType
+	}
+
+	return keyPair, nil
+}
+
 // Create a new RSA CryptoOperations instance that implements the CryptoOperations interface.
 func NewRsaCryptoOperations() CryptoOperations {
-	return struct {
-		KeyPair
-		Generator
-		Marshaler
-	}{
+	return &rsaCryptoOperations{
 		KeyPair:   &rsaKeyPair{},
 		Generator: &rsaGenerator{},
 		Marshaler: NewRSAMarshaler(),
