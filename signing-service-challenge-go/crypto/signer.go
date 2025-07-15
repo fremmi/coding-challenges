@@ -8,6 +8,10 @@ import (
 	"crypto/sha256"
 )
 
+var NewSigner = func(algo Algorithm, keys KeyPair) Signer {
+	return newSigner(algo, keys)
+}
+
 // Signer defines a contract for different types of signing implementations.
 type Signer interface {
 	Sign(dataToBeSigned []byte) ([]byte, error)
@@ -17,7 +21,7 @@ type rsaSigner struct {
 	rsaKeyPair *rsaKeyPair
 }
 
-func NewSigner(algo Algorithm, keys KeyPair) Signer {
+func newSigner(algo Algorithm, keys KeyPair) Signer {
 	switch algo {
 	case AlgorithmRSA:
 		if rsaKeyPair, ok := keys.(*rsaKeyPair); ok {

@@ -7,6 +7,10 @@ import (
 	"errors"
 )
 
+var NewRSAMarshaler = func() Marshaler {
+	return newRSAMarshaler()
+}
+
 var ErrInvalidKeyPairType = errors.New("invalid key pair type")
 
 // rsaKeyPair is a DTO that holds RSA private and public keys.
@@ -28,7 +32,7 @@ func (r *rsaKeyPair) GetPublic() any {
 type rsaMarshaler struct{}
 
 // NewRSAMarshaler creates a new RSAMarshaler.
-func NewRSAMarshaler() *rsaMarshaler {
+func newRSAMarshaler() *rsaMarshaler {
 	return &rsaMarshaler{}
 }
 

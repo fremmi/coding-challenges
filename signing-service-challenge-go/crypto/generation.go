@@ -7,6 +7,14 @@ import (
 	"crypto/rsa"
 )
 
+var NewRsaGenerator = func() Generator {
+	return &RsaGenerator{}
+}
+
+var NewEccGenerator = func() Generator {
+	return &EccGenerator{}
+}
+
 // RsaGenerator generates a RSA key pair.
 type RsaGenerator struct{}
 

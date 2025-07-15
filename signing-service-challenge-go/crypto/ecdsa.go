@@ -6,6 +6,12 @@ import (
 	"encoding/pem"
 )
 
+// A builder function for creating a new ECCMarshaler.
+// useful for testing or when you want to use a different implementation.
+var NewECCMarshaler = func() Marshaler {
+	return newECCMarshaler()
+}
+
 // eccKeyPair is a DTO that holds ECC private and public keys.
 type eccKeyPair struct {
 	Public  *ecdsa.PublicKey
@@ -25,7 +31,7 @@ func (e *eccKeyPair) GetPublic() any {
 type eccMarshaler struct{}
 
 // NewECCMarshaler creates a new ECCMarshaler.
-func NewECCMarshaler() *eccMarshaler {
+func newECCMarshaler() *eccMarshaler {
 	return &eccMarshaler{}
 }
 
