@@ -106,6 +106,7 @@ func (dm *DeviceManager) GetDevice(id string) (*domain.Device, error) {
 }
 
 // StoreDevices stores all devices in the DeviceManager to a persistent storage.
+// NOT FULLY IMPLEMENTED
 func (dm *DeviceManager) StoreDevices() {
 	for _, device := range dm.devices {
 		persisted, err := Persisted(device)
@@ -120,7 +121,7 @@ func (dm *DeviceManager) StoreDevices() {
 }
 
 // RestoreDevices restores all devices from a persistent storage to the DeviceManager.
-// This is just an example of serialiazing and deserializing devices. Not fully implemented yet.
+// This is just an example of serialiazing and deserializing devices. NOT FULLY implemented yet.
 func (dm *DeviceManager) RestoreDevices() {
 	// Some logic here to restore from a persistent storage. TBD
 	// For now, we will just return an empty map.
