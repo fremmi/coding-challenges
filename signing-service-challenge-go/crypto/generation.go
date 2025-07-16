@@ -40,7 +40,6 @@ func (g *RsaGenerator) generate() (*rsaKeyPair, error) {
 // EccGenerator implements Generator interface
 type EccGenerator struct{}
 
-// Implement Generator for type ECCKeyPair
 func (g *EccGenerator) GenerateKeyPair() (KeyPair, error) {
 	return g.generate()
 }

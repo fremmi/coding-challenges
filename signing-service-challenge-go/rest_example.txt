@@ -1,0 +1,33 @@
+POST http://localhost:8080//api/v0/create_signature_device
+
+{
+	"id": "2",
+	"algorithm": "ECC",
+	"label": "mydevice"
+}
+
+
+#############################################################
+
+POST http://localhost:8080//api/v0/sign_transaction
+
+{
+	"id": "2",
+	"transaction": "un'altra ancora"
+}
+
+###########################################################
+
+POST http://localhost:8080//api/v0/list_transactions
+{
+	"id": "2"
+}
+
+#######################################################
+
+POST http://localhost:8080//api/v0/get_transaction
+
+{
+	"device_id": "2",
+	"transaction_id": "1000"
+}

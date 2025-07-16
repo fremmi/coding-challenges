@@ -20,7 +20,6 @@ type rsaKeyPair struct {
 	Private *rsa.PrivateKey
 }
 
-// Implement KeyPair interface for RSAKeyPair
 func (r *rsaKeyPair) GetPrivate() any {
 	return r.Private
 }

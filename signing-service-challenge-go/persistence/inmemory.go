@@ -6,6 +6,7 @@ import (
 
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/crypto"
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/domain"
+	"k8s.io/klog"
 )
 
 var ErrDeviceAlreadyExists = errors.New("device already exists")
@@ -44,7 +45,8 @@ func Persisted(d *domain.Device) ([]byte, error) {
 	return json.Marshal(persistedDevice)
 }
 
-// RestoreDevice restores a Device from its persisted JSON representation.
+// RestoreDevice restores a Device from its persisted JSON representation and return
+// a Device structur
 func RestoreDevice(persisted []byte) (*domain.Device, error) {
 	var d = &domain.Device{}
 	var persistedDevice PersistedDevice
@@ -94,11 +96,13 @@ func NewDeviceManager() *DeviceManager {
 // We assume that id is unique, meaning that the same id cannot be used for multiple algorithms
 func (dm *DeviceManager) AddDevice(id string, algo crypto.Algorithm, label string) (*domain.Device, error) {
 	if _, exists := dm.devices[id]; exists {
+		klog.Infof("Device with ID %s already exists", id)
 		return nil, ErrDeviceAlreadyExists
 	}
 
 	device, err := domain.NewDevice(id, label, algo)
 	if err != nil {
+		klog.Errorf("Failed to create device with ID %s: %v", id, err)
 		return nil, err
 	}
 
@@ -110,6 +114,7 @@ func (dm *DeviceManager) GetDevice(id string) (*domain.Device, error) {
 	if device, exists := dm.devices[id]; exists {
 		return device, nil
 	}
+	klog.Infof("Device with ID %s not found", id)
 	return nil, errors.New("device not found")
 }
 

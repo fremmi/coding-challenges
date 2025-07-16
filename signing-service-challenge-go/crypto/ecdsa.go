@@ -18,7 +18,6 @@ type eccKeyPair struct {
 	Private *ecdsa.PrivateKey
 }
 
-// Implement KeyPair interface for ECCKeyPair
 func (e *eccKeyPair) GetPrivate() any {
 	return e.Private
 }
@@ -27,11 +26,10 @@ func (e *eccKeyPair) GetPublic() any {
 	return e.Public
 }
 
-// eccMarshaler can encode and decode an ECC key pair.
-// implements the Marshaler interface.
+// eccMarshaler implements the Marshaler interface.
 type eccMarshaler struct{}
 
-// NewECCMarshaler creates a new ECCMarshaler.
+// newECCMarshaler creates a new ECCMarshaler.
 func newECCMarshaler() *eccMarshaler {
 	return &eccMarshaler{}
 }
@@ -52,7 +50,7 @@ func (m *eccMarshaler) Decode(privateKeyBytes []byte) (KeyPair, error) {
 	return keyPair, nil
 }
 
-// Encode takes an ECCKeyPair and encodes it to be written on disk.
+// marshal takes an ECCKeyPair and encodes it to be written on disk.
 // It returns the public and the private key as a byte slice.
 func (m eccMarshaler) marshal(keyPair *eccKeyPair) ([]byte, []byte, error) {
 	privateKeyBytes, err := x509.MarshalECPrivateKey(keyPair.Private)
